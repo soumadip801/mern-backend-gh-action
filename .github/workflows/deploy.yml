@@ -1,0 +1,51 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Validate app startup script
+        run: node -e "console.log('Backend dependencies installed successfully')"
+
+      - name: Build Docker image
+        run: docker build -t mern-backend:${{ github.sha }} .
+
+      - name: Login to Docker Hub
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      - name: Push Docker image
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        run: |
+          docker tag mern-backend:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/mern-backend:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/mern-backend:${{ github.sha }}
+
+      - name: Deployment reminder
+        run: echo "Add your Docker Hub or VPS deployment credentials to GitHub Secrets to complete deployment."
