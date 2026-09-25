@@ -1,7 +1,7 @@
 node_modules/
 .env
-.env.*
-!.env.example
-uploads/
-*.log
-.env.example
+*.pem
+logs/
+ecosystem.config.js
+.env
+mern-student-kp.pem
