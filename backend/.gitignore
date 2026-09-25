@@ -5,3 +5,8 @@ logs/
 ecosystem.config.js
 .env
 mern-student-kp.pem
+node_modules/
+.env
+.env.*
+*.pem
+logs/
